@@ -56,6 +56,7 @@
 #  Telco_customer_churn_status$`Customer Status`
 #  Telco_customer_churn_status$`Churn Category`
 library(readxl)
+setwd(dirname(rstudioapi::getSourceEditorContext()$path));
 Telco_customer_churn_demographics <- read_excel("./data/Telco_customer_churn_demographics.xlsx");
 Telco_customer_churn_services <- read_excel("./data/Telco_customer_churn_services.xlsx");
 Telco_customer_churn_status <- read_excel("./data/Telco_customer_churn_status.xlsx");
