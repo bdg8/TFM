@@ -56,10 +56,10 @@
 #  Telco_customer_churn_status$`Customer Status`
 #  Telco_customer_churn_status$`Churn Category`
 library(readxl)
-Telco_customer_churn_demographics <- read_excel("Documents/UNIR_BI/TFM/tfm/data/Telco_customer_churn_demographics.xlsx");
-Telco_customer_churn_services <- read_excel("Documents/UNIR_BI/TFM/tfm/data/Telco_customer_churn_services.xlsx");
-Telco_customer_churn_status <- read_excel("Documents/UNIR_BI/TFM/tfm/data/Telco_customer_churn_status.xlsx");
-Telco_customer_churn <- read_excel("Documents/UNIR_BI/TFM/tfm/data/Telco_customer_churn.xlsx");
+Telco_customer_churn_demographics <- read_excel("./data/Telco_customer_churn_demographics.xlsx");
+Telco_customer_churn_services <- read_excel("./data/Telco_customer_churn_services.xlsx");
+Telco_customer_churn_status <- read_excel("./data/Telco_customer_churn_status.xlsx");
+Telco_customer_churn <- read_excel("./data/Telco_customer_churn.xlsx");
 
  
 full_data1 = cbind(Telco_customer_churn$CustomerID, Telco_customer_churn$Count, Telco_customer_churn$Country, 
