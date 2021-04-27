@@ -93,3 +93,13 @@ dfdata4 = dfdata4[,!(names(dfdata4) %in% drop)]
 datos <- merge(dfdata1, dfdata2)
 datos <- merge(datos, dfdata3)
 datos <- merge(datos, dfdata4)
+
+#Para utilizar la función select es necesaria la librería dplyr
+#install.packages("dplyr") 
+library (dplyr)
+
+#Quitamos las columnas que no son útiles para el análisis
+datos <- select (datos, -Count, -Churn.Label, -Country, -Zip.Code, -Lat.Long, 
+                 -Latitude, -Longitude, -Partner, -Tenure.Months, 
+                 -Device.Protection, -Tech.Support, -Monthly.Charges, -Quarter,
+                 -Dependents, -Referred.a.Friend)
