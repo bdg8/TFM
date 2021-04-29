@@ -99,7 +99,105 @@ datos <- merge(datos, dfdata4)
 library (dplyr)
 
 #Quitamos las columnas que no son útiles para el análisis
-datos <- select (datos, -Count, -Churn.Label, -Country, -Zip.Code, -Lat.Long, 
+datoscopia <- datos
+  
+
+
+
+
+
+
+
+datoscopia <-  select (datos, -Count, -Senior.Citizen, -Churn.Label, -Country, -Zip.Code, -Lat.Long, 
                  -Latitude, -Longitude, -Partner, -Tenure.Months, 
                  -Device.Protection, -Tech.Support, -Monthly.Charges, -Quarter,
-                 -Dependents, -Referred.a.Friend)
+                 -Dependents, -Referred.a.Friend, -Under.30, -State, -Customer.Status )
+
+#observamos los datos
+str(datoscopia)
+summary(datoscopia)
+# el comando describe nos muestra un panorama m�s completo de las variables. En el caso de las num�ricas 
+#nos muestra los estad�sticos descriptivos, la cantidad de observaciones, los valores perdidos. Para las 
+#variables categ�ricas, muestra la frecuencia, las proporciones y los valores perdidos.
+install.packages("Hmisc")
+library(Hmisc)
+describe(datoscopia)
+
+#vamos a crear una copia de los datos solo con las variables que necesitamos de momento para iniciarnos con la
+#segmentacion de los clientes, para ello, deben ser todas numericas para estudiar la correlacion. 
+
+datosnumericos <-  datoscopia
+datosnumericos <-  select (datosnumericos, - Gender, -Phone.Service, -Paperless.Billing, -Married, 
+                           -Offer, -Multiple.Lines, -Internet.Service, -Internet.Type, -Online.Security,
+                           -Online.Backup, -Device.Protection.Plan, -Premium.Tech.Support, -Streaming.TV,
+                           -Streaming.Music, -Streaming.Movies, -Unlimited.Data,-Contract, -Payment.Method,
+                           -City, -Churn.Reason, -Churn.Category )
+
+# esto lo dejo aqui por si necesitamos en algun momento convertir las variables que no son numericas a factor, pero 
+#no le eches cuenta ahora mismo
+
+datosnumericos$Gender <- as.factor(datosnumericos$Gender)
+datosnumericos$Phone.Service <- as.factor(datosnumericos$Phone.Service)
+datosnumericos$Paperless.Billing <- as.factor(datosnumericos$Paperless.Billing)
+datosnumericos$Married <- as.factor(datosnumericos$Married)
+datosnumericos$Offer <- as.factor(datosnumericos$offer)
+datosnumericos$Multiple.Lines <- as.factor(datosnumericos$Multiple.Lines)
+datosnumericos$Internet.Service <- as.factor(datosnumericos$Internet.Service)
+datosnumericos$Internet.Type <- as.factor(datosnumericos$Internet.Type)
+datosnumericos$Online.Security <- as.factor(datosnumericos$Online.Security)
+datosnumericos$Online.Backup <- as.factor(datosnumericos$Online.Backup)
+datosnumericos$Device.Protection.Plan <- as.factor(datosnumericos$Device.Protection.Plan)
+datosnumericos$Premium.Tech.Support <- as.factor(datosnumericos$Premium.Tech.Support)
+datosnumericos$Streaming.TV <- as.factor(datosnumericos$Streaming.TV)
+datosnumericos$Streaming.Movies <- as.factor(datosnumericos$Streaming.Movies)
+datosnumericos$Streaming.Music <- as.factor(datosnumericos$Streaming.Music)
+datosnumericos$Unlimited.Data <- as.factor(datosnumericos$Unlimited.Data)
+datosnumericos$Contract <- as.factor(datosnumericos$Contract)
+datosnumericos$Payment.Method <- as.factor(datosnumericos$Payment.Method)
+
+#comprobamos los datos
+str(datosnumericos)
+cor(datosnumericos)
+#estandarizamos/normalizamos los datos numericos
+datos_scaled <- scale(datosnumericos[,-1])
+datos_scaled <- data.frame(datos_scaled)
+
+#realizamos analisis preliminar de los datos
+plot(datos_scaled)
+correlacion<-round(cor(datos_scaled), 1)
+library(tidyverse)
+library(corrplot)
+
+#matriz de correlacion
+corrplot(correlacion, method="number", type="upper")
+
+#para ver si la correlacion es estadisticamente significativa con un nivel de significancia 
+#del 5% segun el pvalue
+rcorr(as.matrix(datos_scaled))
+
+#con este comando lo vemos todo, la correlacion, la significancia y la dispersion 
+install.packages("PerformanceAnalytics")
+library(PerformanceAnalytics)
+chart.Correlation(datos_scaled, histogram = F, pch = 19)
+
+#a�ado la columna de customerID a la tabla normalizada
+datos_scaled$CustomerID <- datoscopia$CustomerID
+
+#empezamos a analizar el numero optimo de clusters
+#probamos primero con factoextra
+install.packages("factoextra")
+library(factoextra)
+fviz_nbclust(datos_scaled[,-17],kmeans)
+#nos dice que el optimo seria 2 o 4 
+
+#Probamos con la metrica de Within cluster Sum of Squares (wss)
+fviz_nbclust(datos_scaled[,-17],kmeans, method="wss")
+#diria que es entre 4 o 5 pero no lo tengo claro (es el del codo)
+
+#probamos ahora con la libreria NbClust (tarda un buen rato)
+library(NbClust)
+
+NbClust(datos_scaled[,-17], min.nc = 2, max.nc=8, method="kmeans")
+
+
+
