@@ -1,62 +1,6 @@
-#columnas con las que me quedo (totales)
-# Telco_customer_churn$CustomerID
-# Telco_customer_churn$Count
-# Telco_customer_churn$Country
-# Telco_customer_churn$State
-# Telco_customer_churn$City
-# Telco_customer_churn$`Zip Code`
-# Telco_customer_churn$`Lat Long`
-# Telco_customer_churn$Latitude
-# Telco_customer_churn$Longitude
-# Telco_customer_churn$Gender
-# Telco_customer_churn$`Senior Citizen`
-# Telco_customer_churn$Partner
-#   Telco_customer_churn$Dependents
-#   Telco_customer_churn$`Tenure Months`
-#   Telco_customer_churn$`Phone Service`
-#   Telco_customer_churn$`Multiple Lines`
-#   Telco_customer_churn$`Internet Service`
-#   Telco_customer_churn$`Online Security`
-#   Telco_customer_churn$`Online Backup`
-#   Telco_customer_churn$`Device Protection`
-#   Telco_customer_churn$`Tech Support`
-#   Telco_customer_churn$`Streaming TV`
-#   Telco_customer_churn$`Streaming Movies`
-#   Telco_customer_churn$Contract
-#   Telco_customer_churn$`Paperless Billing`
-#   Telco_customer_churn$`Payment Method`
-#   Telco_customer_churn$`Monthly Charges`
-#   Telco_customer_churn$`Total Charges`
-#   Telco_customer_churn$`Churn Label`
-#   Telco_customer_churn$`Churn Value`
-#   Telco_customer_churn$`Churn Score`
-#   Telco_customer_churn$CLTV
-#   Telco_customer_churn$`Churn Reason`
-#   Telco_customer_churn_demographics$Age
-#   Telco_customer_churn_demographics$`Under 30`
-#   Telco_customer_churn_demographics$Married
-#   Telco_customer_churn_demographics$`Number of Dependents`
-#   Telco_customer_churn_services$Quarter
-#   Telco_customer_churn_services$`Referred a Friend`
-#   Telco_customer_churn_services$`Number of Referrals`
-#   Telco_customer_churn_services$`Tenure in Months`
-#   Telco_customer_churn_services$Offer
-#   Telco_customer_churn_services$`Avg Monthly Long Distance Charges`
-#   Telco_customer_churn_services$`Internet Type`
-#   Telco_customer_churn_services$`Avg Monthly GB Download`
-#   Telco_customer_churn_services$`Device Protection Plan`
-#   Telco_customer_churn_services$`Premium Tech Support`
-#   Telco_customer_churn_services$`Streaming Music`
-#   Telco_customer_churn_services$`Unlimited Data`
-#   Telco_customer_churn_services$`Total Refunds`
-#   Telco_customer_churn_services$`Total Extra Data Charges`
-#   Telco_customer_churn_services$`Total Long Distance Charges`
-#   Telco_customer_churn_services$`Total Revenue`
-#  Telco_customer_churn_status$`Satisfaction Score`
-#  Telco_customer_churn_status$`Customer Status`
-#  Telco_customer_churn_status$`Churn Category`
-
+#librerías utilizadas
 library(readxl)
+library (dplyr)
 
 #Seteamos el directorio de trabajo a la ruta de este fichero 
 setwd(dirname(rstudioapi::getSourceEditorContext()$path));
@@ -94,24 +38,24 @@ datos <- merge(dfdata1, dfdata2)
 datos <- merge(datos, dfdata3)
 datos <- merge(datos, dfdata4)
 
-#Para utilizar la función select es necesaria la librería dplyr
-#install.packages("dplyr") 
-library (dplyr)
-
 #Quitamos las columnas que no son útiles para el análisis
-datoscopia <- datos
-  
-
-
-
-
-
-
-
 datoscopia <-  select (datos, -Count, -Senior.Citizen, -Churn.Label, -Country, -Zip.Code, -Lat.Long, 
                  -Latitude, -Longitude, -Partner, -Tenure.Months, 
                  -Device.Protection, -Tech.Support, -Monthly.Charges, -Quarter,
-                 -Dependents, -Referred.a.Friend, -Under.30, -State, -Customer.Status )
+                 -Dependents, -Referred.a.Friend, -Under.30, -State, -Customer.Status)
+
+#Frecuencia de la tasa de abandono
+table(datos$Churn.Value)
+#Miramos si hay valores nulos
+table(is.na(datos))
+#Vemos las variables para buscar valores faltantes
+apply(is.na(datos), 2, which)
+#Miramos cuántos valores nulos hay en Churn Category
+table(is.na(datos$Churn.Category))
+#Miramos cuántos valores nulos hay en Churn Reason
+table(is.na(datos$Churn.Reason))
+#Quitamos estas últimas columnas que no son útiles para el análisis y CustomerID que tampoco aporta 
+datoscopia <- select(datoscopia, -Churn.Category, -Churn.Reason, -CustomerID)
 
 #observamos los datos
 str(datoscopia)
@@ -126,12 +70,11 @@ describe(datoscopia)
 #vamos a crear una copia de los datos solo con las variables que necesitamos de momento para iniciarnos con la
 #segmentacion de los clientes, para ello, deben ser todas numericas para estudiar la correlacion. 
 
-datosnumericos <-  datoscopia
-datosnumericos <-  select (datosnumericos, - Gender, -Phone.Service, -Paperless.Billing, -Married, 
+datosnumericos <-  select (datoscopia, - Gender, -Phone.Service, -Paperless.Billing, -Married, 
                            -Offer, -Multiple.Lines, -Internet.Service, -Internet.Type, -Online.Security,
                            -Online.Backup, -Device.Protection.Plan, -Premium.Tech.Support, -Streaming.TV,
                            -Streaming.Music, -Streaming.Movies, -Unlimited.Data,-Contract, -Payment.Method,
-                           -City, -Churn.Reason, -Churn.Category )
+                           -City)
 
 # esto lo dejo aqui por si necesitamos en algun momento convertir las variables que no son numericas a factor, pero 
 #no le eches cuenta ahora mismo
@@ -155,15 +98,11 @@ datosnumericos$Unlimited.Data <- as.factor(datosnumericos$Unlimited.Data)
 datosnumericos$Contract <- as.factor(datosnumericos$Contract)
 datosnumericos$Payment.Method <- as.factor(datosnumericos$Payment.Method)
 
-#comprobamos los datos
-str(datosnumericos)
-cor(datosnumericos)
 #estandarizamos/normalizamos los datos numericos
 datos_scaled <- scale(datosnumericos[,-1])
 datos_scaled <- data.frame(datos_scaled)
 
 #realizamos analisis preliminar de los datos
-plot(datos_scaled)
 correlacion<-round(cor(datos_scaled), 1)
 library(tidyverse)
 library(corrplot)
@@ -187,17 +126,30 @@ datos_scaled$CustomerID <- datoscopia$CustomerID
 #probamos primero con factoextra
 install.packages("factoextra")
 library(factoextra)
-fviz_nbclust(datos_scaled[,-17],kmeans)
+fviz_nbclust(datos_scaled[,-16],kmeans)
 #nos dice que el optimo seria 2 o 4 
 
 #Probamos con la metrica de Within cluster Sum of Squares (wss)
-fviz_nbclust(datos_scaled[,-17],kmeans, method="wss")
+fviz_nbclust(datos_scaled[,-16],kmeans, method="wss")
 #diria que es entre 4 o 5 pero no lo tengo claro (es el del codo)
 
 #probamos ahora con la libreria NbClust (tarda un buen rato)
 library(NbClust)
 
-NbClust(datos_scaled[,-17], min.nc = 2, max.nc=8, method="kmeans")
+NbClust(datos_scaled[,-16], min.nc = 2, max.nc=8, method="kmeans")
 
+#Aplicamos el método stepwise para seleccionar las variables
+#Instalamos el paquete MASS para ello
+#install.packages("MASS") 
+library (MASS)
 
-
+#Convierto la variable Churn a factor
+datoscopia$Churn.Value<-as.factor(datoscopia$Churn.Value)
+#Establecemos los valores inferior y superior para aplicar el modelo
+inferior <- glm(Churn.Value~1,data=datoscopia,family = binomial(link="logit"))
+full<-glm(Churn.Value ~.,data=datoscopia,family = binomial(link="logit"))
+#Aplicamos el modelo stepwise
+var_sele <-stepAIC(inferior,scope=list(upper=full),direction="both",
+                trace=FALSE,family = binomial(link="logit"))
+summary(var_sele)
+formula(var_sele)
