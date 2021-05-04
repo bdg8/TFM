@@ -340,13 +340,13 @@ install.packages("Rtsne")
 library(Rtsne)
 library(ggpubr)
 
-#Seleccionar variables a utilizar en el cluster
+#Seleccionar variables a utilizar en el modelo de cluster con PAM
 #nos basamos en el PCA
 
 datos2 = datosnumericos %>% select(Gender, Phone.Service, Paperless.Billing, Churn.Value, CLTV,
                                    Age, Married, Number.of.Referrals, Tenure.in.Months, Offer, 
                                    Device.Protection.Plan, Streaming.Music, Contract, Payment.Method, 
-                                   Monthly.Charge, Churn.Score, Total.Extra.Data.Charges)
+                                   Monthly.Charge, Churn.Score, Satisfaction.Score, Total.Extra.Data.Charges)
 
 #calcular distancias tipo gower
 
@@ -373,6 +373,53 @@ kp <- pam(datos2, 4 )
 clusplot( datos2, kp$cluster, color = TRUE, 
           shade = FALSE, labels = 4, lines = 1,
           col.p = "#FC4E07" )
+#empezamos a analizar el numero optimo de clusters con otros metodos
+#dendograma
+matriz_distancias <- dist(x = datoscopia, method = "euclidean")
+hc_metodo_ward  <- hclust(d = gower_datos2, method = "ward.D")
+plot(x = hc_metodo_ward, cex = 0.6, xlab = "", ylab = "", sub = "",
+     main = "Metodo ward(jerarquico)")
+
+#############CLUSTER k=2 #####################
+
+#Estimar clusters y añadir el cluster a cada tipo
+
+pam_ijimai_2 = pam(gower_datos2, diss = TRUE, k = 2) 
+datos2[pam_ijimai_2$medoids, ]
+
+#Para resumir la información de cada cluster
+
+pam_summary_2 <- datos2 %>%
+  mutate(cluster = pam_ijimai_2$clustering) %>%
+  group_by(cluster) %>%
+  do(cluster_summary = summary(.))
+
+
+pam_summary_2$cluster_summary[[2]]
+
+
+#Para representarlo gráficamente
+
+tsne_object2 <- Rtsne(gower_datos2, is_distance = TRUE)
+
+tsne_df2 <- tsne_object$Y %>%
+  data.frame() %>%
+  setNames(c("X", "Y")) %>%
+  mutate(cluster = factor(pam_ijimai_2$clustering))
+
+ggplot(aes(x = X, y = Y), data = tsne_df2) +
+  geom_point(aes(color = cluster)) +
+  scale_color_manual(values=c("#0098cd","#55225f", "#7fb433"))
+
+#Para añadir el cluster en el dataset inicial
+
+df_final_2<-bind_cols(datos2, pam_ijimai_2['clustering'])
+df_final_2$clustering <- as.factor(df_final_2$clustering)
+
+#Para saber la propensión de cada cluster
+
+prop.table(table(df_final_2$clustering, df_final_2$Churn.Value),1)
+
 
 #############CLUSTER k=3 #####################
 
