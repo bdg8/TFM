@@ -10,6 +10,7 @@ library(ggplot2)
 library(Rtsne) #PAM
 library(ggpubr)
 
+
 ############################ STEPWISE ######################################### 
 #Establecemos los valores inferior y superior para aplicar el modelo
 minimo <- glm(Churn.Value~1,data=datos,family = binomial(link="logit"))
