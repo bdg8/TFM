@@ -78,7 +78,7 @@ describe(datos)
 ###############################################################################
 
 #vamos a crear una copia de los datos solo con las variables que necesitamos de momento para iniciarnos con la
-#segmentacion de los clientes, para ello, deben ser todas numericas para estudiar la correlacion. 
+#segmentacion de los clientes.Deben ser numéricas para estudiar la correlación. 
 
 datosnumericos <-  select (datos, - Gender, -Phone.Service, -Paperless.Billing, -Married, 
                            -Offer, -Multiple.Lines, -Internet.Service, -Internet.Type, -Online.Security,
@@ -112,9 +112,43 @@ datosfactor$City <- as.factor(datosfactor$City)
 
 #elimino city porque tendria 1129 levels en factor 
 datosfactor <- datosfactor[,-35]
+###############################################################################
+###############################################################################
+
+datosCluster = datosnumericos %>% select(Paperless.Billing,
+                                   Age, Married, Offer, 
+                                   Device.Protection.Plan, Streaming.Music,Streaming.Movies,Streaming.TV,
+                                   Contract, Payment.Method,
+                                   Monthly.Charge, Online.Backup,  
+                                   Premium.Tech.Support, Unlimited.Data,
+                                   Online.Security, Multiple.Lines, Internet.Service
+)
+
+# convertimos la variable número de hijos en factor
+datosCluster$Number.of.Dependents <- as.factor(datosCluster$Number.of.Dependents)
+
+
+#convertimos la variable edad a categórica 
+datosCluster[,"EdadGrupos"] <- cut(datosnumericos$Age, breaks = c(18, 30, 40, 50, 60, 80), 
+                             labels = c("19 a 30", "31 a 40", "41 a 50", "51 a 60",
+                                        "61 a 80"))
+# una vez convertida a rangos elimino su versión numérica de la tabla 
+datosCluster <- datosCluster[,-4]
+
+#y la paso a factor
+datosCluster$EdadGrupos <- as.factor(datosCluster$EdadGrupos)
+
+#convertimos la variable MonthlyCharge a categórica, eliminamos la original y convertimos a factor
+datosCluster[,"Monthly.Charge.Cat"] <- cut(datosCluster$Monthly.Charge, breaks = c(18, 25, 60, 80, 100, 120), 
+                                     labels = c("18.25 - 25", "25 - 60", "60 - 80", "80 - 100",
+                                                "100 - 118.25"))
+datosCluster <- datosCluster[,-13]
+datosCluster$Monthly.Charge.Cat <- as.factor(datosCluster$Monthly.Charge.Cat)
+
 
 ###############################################################################
 ###############################################################################
+#Variables para aplicar el modelo Stepwise
 
 var_sele_step <- c("Churn.Value","Churn.Score", "Online.Security", "Contract", "Internet.Type",
                    "Number.of.Referrals", "Married", "Offer", "Number.of.Dependents",
@@ -128,25 +162,25 @@ datos_scaled_sw <- data.frame(datos_scaled_sw, datos_sel_step[,!(names(datos_sel
 ###############################################################################
 ###############################################################################
 
-#estandarizamos/normalizamos los datos numericos
+#estandarizamos/normalizamos los datos numéricos
 datos_scaled <- scale(datosnumericos[,-1])
 datos_scaled <- data.frame(datos_scaled)
 
-#realizamos analisis preliminar de los datos
+#realizamos análisis preliminar de los datos
 correlacion<-round(cor(datos_scaled), 1)
 
-#matriz de correlacion
-corrplot(correlacion, method="number", type="upper")
+#matriz de correlación
+#corrplot(correlacion, method="number", type="upper")
 
 #para ver si la correlacion es estadisticamente significativa con un nivel de significancia 
 #del 5% segun el pvalue
-rcorr(as.matrix(datos_scaled))
+#rcorr(as.matrix(datos_scaled))
 
 #con este comando lo vemos todo, la correlacion, la significancia y la dispersion 
 #install.packages("PerformanceAnalytics")
-chart.Correlation(datos_scaled, histogram = F, pch = 19)
+#chart.Correlation(datos_scaled, histogram = F, pch = 19)
 
-#a�ado la columna de customerID a la tabla normalizada
+#añado la columna de customerID a la tabla normalizada
 datos_scaled$CustomerID <- datos$CustomerID
 
 ###############################################################################
@@ -186,4 +220,18 @@ datosPAM = datosfactor %>% select(Gender, Phone.Service, Paperless.Billing, Chur
                                    Age, Married, Number.of.Referrals, Tenure.in.Months, Offer, 
                                    Device.Protection.Plan, Streaming.Music, Contract, Payment.Method, 
                                    Monthly.Charge, Churn.Score, Satisfaction.Score, Total.Extra.Data.Charges)
+
+###############################################################################
+###############################################################################
+
+#Calculo el 80% de los datos del fichero redondeando al entero más cercano por debajo
+bound <- floor(nrow(datos_scaled_sw)* 0.8)
+#Conjunto de entrenamiento
+train <-datos_scaled_sw[1:bound,]
+#Conjunto de validación
+test <-datos_scaled_sw[(bound+1):nrow(datos_scaled_sw),]
+#Comprobamos que los conjuntos de entrenamiento y validación están balanceados
+prop.table(table(train$Churn.Value))
+prop.table(table(test$Churn.Value))
+prop.table(table(datos_scaled_sw$Churn.Value))
 

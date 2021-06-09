@@ -1,6 +1,4 @@
 #librerías utilizadas
-library (dplyr)
-library (MASS) #stepwise
 library(FactoMineR) #PCA
 library(factoextra)
 library(corrplot)
@@ -10,18 +8,6 @@ library(ggplot2)
 library(Rtsne) #PAM
 library(ggpubr)
 
-
-############################ STEPWISE ######################################### 
-#Establecemos los valores inferior y superior para aplicar el modelo
-minimo <- glm(Churn.Value~1,data=datos,family = binomial(link="logit"))
-completo <-glm(Churn.Value ~.,data=datos,family = binomial(link="logit"))
-#Aplicamos el modelo stepwise
-var_sele <-stepAIC(minimo,scope=list(upper=completo),direction="both",
-                   trace=FALSE,family = binomial(link="logit"))
-summary(var_sele)
-formula(var_sele)
-
-
 ############################ PCA ############################################## 
 
 #El PCA solo puede aplicarse a datos numéricos. 
@@ -29,7 +15,7 @@ formula(var_sele)
 #Creamos el objeto del Analisis PCA
 AnalisisPCA <- PCA(X = datosdummiesnormal, scale.unit = FALSE, ncp = 65, graph = TRUE)
 
-#El mismo pero dejamos que la funcion escale los datos en vez de escarlo nosotras
+#El mismo pero dejamos que la funcion escale los datos en vez de escalarlo nosotras
 AnalisisPCA2<- PCA(X = datosdummies, scale.unit = TRUE, ncp = 65, graph = TRUE)
 
 #Calidad de representación en el mapa de factores
@@ -44,8 +30,8 @@ corrplot(AnalisisPCA$var$contrib, is.corr=FALSE)
 get_eigenvalue(AnalisisPCA2)
 
 #como necesitamos muchos componentes principales para explicar la varianza total 
-#de nuestros datos, vamos a buscar el punto de inflexion de cuantos serian nuestros 
-#componentes optimos, el porcentaje debemos pensar nosotras cual queremos
+#de nuestros datos, vamos a buscar el punto de inflexión de cuántos serían nuestros 
+#componentes óptimos, el porcentaje debemos pensar nosotras cuál queremos
 fviz_eig(AnalisisPCA2, addlabels = TRUE, ylim = c(0, 50))
 corrplot(AnalisisPCA$var$cos2, is.corr = FALSE)
 
@@ -56,7 +42,7 @@ fviz_contrib(AnalisisPCA, choice = "var", axes = 1, top = 10)
 fviz_contrib(AnalisisPCA, choice = "var", axes = 2, top = 10)
 get_eigenvalue(AnalisisPCA)
 
-#contribuccion total
+#contribución total
 dim1 <- fviz_contrib(AnalisisPCA, choice = "var", axes = 1, top = 5)
 dim2 <- fviz_contrib(AnalisisPCA, choice = "var", axes = 2, top = 5)
 dim3 <- fviz_contrib(AnalisisPCA, choice = "var", axes = 3, top = 5)
@@ -91,7 +77,7 @@ fviz_pca_var(AnalisisPCA, col.var = gruposvar,
              palette = c("#0073C2FF", "#EFC000FF", "#FC4E07", "#00AFBB"),
              legend.title = "Cluster")
 
-#vamos a obserar los individuos
+#vamos a observar los individuos
 fviz_pca_ind(AnalisisPCA, col.ind = "cos2", 
              gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
              repel = FALSE )
@@ -102,8 +88,7 @@ fviz_pca_ind(AnalisisPCA, col.ind = "cos2",
 
 #Determinamos el numero de k con silhouette
 #calcular distancias tipo gower
-#pam_fn <- function(dataFn){
-  dataFn<-ddatosPAM
+  dataFn<-datosCluster
   gower_datosPAM <- daisy(dataFn,
                         metric = "gower")
   
@@ -128,52 +113,12 @@ fviz_pca_ind(AnalisisPCA, col.ind = "cos2",
             shade = FALSE, labels = 4, lines = 1,
             col.p = "#FC4E07" )
   
-  #empezamos a analizar el numero optimo de clusters con otros metodos
+  #empezamos a analizar el número óptimo de clusters con otros métodos
   #dendograma
   matriz_distancias <- dist(x = datos, method = "euclidean")
   hc_metodo_ward  <- hclust(d = gower_datosPAM, method = "ward.D")
   plot(x = hc_metodo_ward, cex = 0.6, xlab = "", ylab = "", sub = "",
        main = "Metodo ward(jerarquico)")
-  
-  #############CLUSTER k=2 #####################
-  
-  #Estimar clusters y añadir el cluster a cada tipo
-  
-  pam_ijimai_2 = pam(gower_datosPAM, diss = TRUE, k = 2) 
-  dataFn[pam_ijimai_2$medoids, ]
-  
-  #Para resumir la información de cada cluster
-  
-  pam_summary_2 <- dataFn %>%
-    mutate(cluster = pam_ijimai_2$clustering) %>%
-    group_by(cluster) %>%
-    do(cluster_summary = summary(.))
-  
-  
-  pam_summary_2$cluster_summary[[2]]
-  
-  
-  #Para representarlo gráficamente
-  
-  tsne_object <- Rtsne(gower_datosPAM, is_distance = TRUE)
-  
-  tsne_df2 <- tsne_object$Y %>%
-    data.frame() %>%
-    setNames(c("X", "Y")) %>%
-    mutate(cluster = factor(pam_ijimai_2$clustering))
-  
-  ggplot(aes(x = X, y = Y), data = tsne_df2) +
-    geom_point(aes(color = cluster)) +
-    scale_color_manual(values=c("#0098cd","#55225f", "#7fb433"))
-  
-  #Para añadir el cluster en el dataset inicial
-  
-  df_final_2<-bind_cols(dataFn, pam_ijimai_2['clustering'])
-  df_final_2$clustering <- as.factor(df_final_2$clustering)
-  
-  #Para saber la propensión de cada cluster
-  
-  prop.table(table(df_final_2$clustering, df_final_2$Churn.Value),1)
   
   
   #############CLUSTER k=3 #####################
@@ -191,7 +136,7 @@ fviz_pca_ind(AnalisisPCA, col.ind = "cos2",
     do(cluster_summary = summary(.))
   
   
-  pam_summary_3$cluster_summary[[2]]
+  pam_summary_3$cluster_summary[[3]]
   
   
   #Para representarlo gráficamente
@@ -216,47 +161,10 @@ fviz_pca_ind(AnalisisPCA, col.ind = "cos2",
   
   prop.table(table(df_final_3$clustering, df_final_3$Churn.Value),1)
   
-  #############CLUSTER k=4 #####################
-  
-  #Estimar clusters y añadir el cluster a cada tipo
-  
-  pam_ijimai_4 = pam(gower_datosPAM, diss = TRUE, k = 4) 
-  dataFn[pam_ijimai_4$medoids, ]
-  
-  #Para resumir la información de cada cluster
-  
-  pam_summary_4 <- dataFn %>%
-    mutate(cluster = pam_ijimai_4$clustering) %>%
-    group_by(cluster) %>%
-    do(cluster_summary = summary(.))
-  
-  
-  pam_summary_4$cluster_summary[[2]]
-  
-  
-  #Para representarlo gráficamente
-  
-  tsne_object4 <- Rtsne(gower_datosPAM, is_distance = TRUE)
-  
-  tsne_df4 <- tsne_object4$Y %>%
-    data.frame() %>%
-    setNames(c("X", "Y")) %>%
-    mutate(cluster = factor(pam_ijimai_4$clustering))
-  
-  ggplot(aes(x = X, y = Y), data = tsne_df4) +
-    geom_point(aes(color = cluster)) +
-    scale_color_manual(values=c("#0098cd","#55225f", "#7fb433", "#FC4E07"))
-  
-  #Para añadir el cluster en el dataset inicial
-  
-  df_final_4<-bind_cols(dataFn, pam_ijimai_4['clustering'])
-  df_final_4$clustering <- as.factor(df_final_4$clustering)
-  
-  #Para saber la propensión a comprar bicicletas de cada cluster
-  
-  prop.table(table(df_final_4$clustering, df_final_4$Churn.Value),1)
-#}
 
-#pam_fn(datosPAM)
-#pam_fn(datos_scaled_sw)
-
+  # vamos a hacer un arbol de clasificación para ayudarnos a poner etiquetas a los clusters 
+  library(rpart.plot)
+  arbolcluster <- rpart(clustering ~ ., data= df_final_3, method = "class")
+  
+  rpart.plot(arbolcluster)
+  
