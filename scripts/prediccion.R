@@ -19,7 +19,7 @@ formula(var_sele)
 
 ############################ LOGIT ############################################## 
 #Creamos modelo logit con las variables obtenidas de stepwise y predecimos
-modelo.logit_step <- glm(Churn.Value ~ Churn.Score + Online.Security  + Contract +
+modelo.logit_step <- glm(Churn.Value ~ Online.Security  + Contract +
                         Internet.Type + Number.of.Referrals + Married + 
                         Offer + Number.of.Dependents + Tenure.in.Months + Payment.Method +
                         Phone.Service + Multiple.Lines, data = train, family = "binomial")
@@ -38,7 +38,7 @@ confusionMatrix(as.factor(prediccion_01),as.factor(test$Churn.Value))
 
 ############################ ÁRBOL ############################################## 
 
-modelo.arbol <- rpart (Churn.Value ~ Churn.Score + Online.Security  + Contract +
+modelo.arbol <- rpart (Churn.Value ~ Online.Security  + Contract +
                          Internet.Type + Number.of.Referrals + Married + 
                          Offer + Number.of.Dependents + Tenure.in.Months + Payment.Method +
                          Phone.Service + Multiple.Lines,data = train, method = "class")
