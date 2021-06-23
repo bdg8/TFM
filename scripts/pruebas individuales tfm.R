@@ -2,7 +2,7 @@
 
 install.packages("writexl") 
 library(writexl) 
-write_xlsx(x = datoscopia, path = "datostfm.xlsx", col_names = TRUE)
+write_xlsx(x = balanced.datosclean, path = "datostfmbalanceados.xlsx", col_names = TRUE)
 
 
 #numero optimo de cluster por dendograma
